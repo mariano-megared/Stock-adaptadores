@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0f1923"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <title>Stock Adaptadores</title>
+  <link rel="manifest" href="manifest.json"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg: #0b1520;
+      --bg2: #111e2d;
+      --bg3: #162437;
+      --card: #19293d;
+      --border: #243650;
+      --accent: #1a8cff;
+      --accent2: #00d4aa;
+      --danger: #ff4a4a;
+      --warning: #ffb830;
+      --text: #e8f0fe;
+      --text2: #8ba5c8;
+      --text3: #4d6a8a;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 0 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 0 10px;
+    }
+    .header-icon { font-size: 28px; }
+    .header-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .header-title span { color: var(--accent); }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding-bottom: 1px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text2);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── CONTENT ── */
+    .content { padding: 16px; max-width: 680px; margin: 0 auto; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── SEARCH / TOOLBAR ── */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .search-wrap {
+      flex: 1;
+      min-width: 180px;
+      position: relative;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 11px 14px 11px 38px;
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text3);
+      font-size: 16px;
+      pointer-events: none;
+    }
+    .btn {
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      border: none;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #3399ff; }
+    .btn-success { background: var(--accent2); color: #0b1520; }
+    .btn-success:hover { filter: brightness(1.1); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── CARDS ── */
+    .cards { display: flex; flex-direction: column; gap: 12px; }
+
+    .adapter-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: border 0.2s, transform 0.15s;
+      position: relative;
+    }
+    .adapter-card:hover { border-color: var(--accent); }
+    .adapter-card.low-stock { border-left: 3px solid var(--warning); }
+    .adapter-card.no-stock { border-left: 3px solid var(--danger); opacity: 0.7; }
+
+    .adapter-img {
+      width: 96px;
+      height: 96px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: var(--bg3);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .adapter-img img { width: 100%; height: 100%; object-fit: cover; }
+
+    .adapter-info { flex: 1; min-width: 0; }
+    .adapter-code {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .adapter-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .stock-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .stock-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 5px 12px;
+      min-width: 64px;
+    }
+    .stock-badge-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 1px;
+    }
+    .stock-badge-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .stock-badge-value.total { color: var(--accent); }
+    .stock-badge-value.parcial { color: var(--accent2); }
+    .stock-badge-value.zero { color: var(--danger); }
+
+    /* ── MÍNIMO VALIJA ── */
+    .minimo-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    .minimo-track {
+      flex: 1;
+      height: 5px;
+      background: var(--bg3);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .minimo-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .minimo-fill.ok      { background: var(--accent2); }
+    .minimo-fill.warning { background: var(--warning); }
+    .minimo-fill.danger  { background: var(--danger); }
+    .minimo-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .minimo-label.ok      { color: var(--accent2); }
+    .minimo-label.warning { color: var(--warning); }
+    .minimo-label.danger  { color: var(--danger); }
+
+    /* ── CONTROLS ── */
+    .adapter-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ctrl-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      text-align: right;
+      min-width: 44px;
+    }
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+    .qty-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg2); }
+    .qty-btn.minus:hover { border-color: var(--danger); color: var(--danger); }
+    .qty-btn.plus-green:hover { border-color: var(--accent2); color: var(--accent2); }
+    .qty-num {
+      width: 34px;
+      text-align: center;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .card-menu-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      border-radius: 6px;
+      transition: color 0.15s;
+    }
+    .card-menu-btn:hover { color: var(--text); }
+
+    /* ── EMPTY ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text3);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; margin-bottom: 6px; color: var(--text2); }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--bg2);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 24px 20px 32px;
+      width: 100%;
+      max-width: 480px;
+      border-top: 1px solid var(--border);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .modal-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+
+    .img-upload {
+      width: 100%;
+      height: 100px;
+      background: var(--bg3);
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border 0.2s;
+      color: var(--text3);
+      font-size: 13px;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+    .img-upload:hover { border-color: var(--accent); color: var(--accent); }
+    .img-upload.has-img { border-style: solid; border-color: var(--accent2); }
+    .img-upload img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .img-upload input { display: none; }
+    .img-upload-icon { font-size: 24px; }
+
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-actions .btn { flex: 1; justify-content: center; padding: 12px; }
+
+    /* ── STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .stat-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--accent2);
+      color: #0b1520;
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 999;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.error { background: var(--danger); color: #fff; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin: 8px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── PARCIAL SELECTION BADGE ── */
+    .in-parcial-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent2);
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      padding: 5px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pill.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── FLOATING ADD BTN ── */
+    .fab {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(26,140,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .fab:hover { background: #3399ff; transform: scale(1.08); }
+
+    /* ── HISTORIAL ── */
+    .hist-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hist-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .hist-icon.minus { background: rgba(255,74,74,0.15); }
+    .hist-icon.plus  { background: rgba(0,212,170,0.15); }
+    .hist-info { flex: 1; min-width: 0; }
+    .hist-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hist-meta {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+    .hist-delta {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .hist-delta.minus { color: var(--danger); }
+    .hist-delta.plus  { color: var(--accent2); }
+
+    @media (min-width: 480px) {
+      .adapter-card { padding: 18px; }
+      .adapter-img { width: 112px; height: 112px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="header-icon">🔧</div>
+    <div class="header-title">Stock <span>Adaptadores</span></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('general')">📦 General</button>
+    <button class="tab" onclick="switchTab('parcial')">🎒 Parcial</button>
+    <button class="tab" onclick="switchTab('historial')">🕒 Historial</button>
+    <button class="tab" onclick="switchTab('export')">📊 Exportar</button>
+  </div>
+</header>
+
+<!-- ── PAGE: GENERAL ── -->
+<div class="content">
+  <div id="page-general" class="page active">
+    <div id="stats-general" class="stats-grid"></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-general" placeholder="Buscar por nombre o código…" oninput="renderGeneral()"/>
+      </div>
+    </div>
+    <div class="filter-pills" id="filter-pills-general"></div>
+    <div id="cards-general" class="cards"></div>
+  </div>
+
+  <!-- ── PAGE: PARCIAL ── -->
+  <div id="page-parcial" class="page">
+    <div id="stats-parcial" class="stats-grid"></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-parcial" placeholder="Buscar…" oninput="renderParcial()"/>
+      </div>
+    </div>
+    <div id="cards-parcial" class="cards"></div>
+  </div>
+
+  <!-- ── PAGE: HISTORIAL ── -->
+  <div id="page-historial" class="page">
+    <div id="stats-historial" class="stats-grid"></div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-historial" placeholder="Buscar en historial…" oninput="renderHistorial()"/>
+      </div>
+      <button class="btn btn-outline" onclick="confirmClearHistory()">🗑️</button>
+    </div>
+    <div class="filter-pills" id="filter-pills-historial"></div>
+    <div id="cards-historial" class="cards"></div>
+  </div>
+
+  <!-- ── PAGE: EXPORT ── -->
+  <div id="page-export" class="page">
+    <div class="section-title">Resumen</div>
+    <div id="stats-export" class="stats-grid"></div>
+    <div class="section-title" style="margin-top:16px">Exportar Excel</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;">
+      <p style="color:var(--text2);font-size:14px;line-height:1.6;margin-bottom:16px;">
+        Genera un archivo Excel con todo el inventario: código, nombre, stock general, stock parcial y categoría.
+      </p>
+      <button class="btn btn-success" onclick="exportExcel()" style="width:100%;justify-content:center;padding:14px;font-size:16px;">
+        ⬇️ &nbsp;Descargar Excel
+      </button>
+    </div>
+    <div class="section-title" style="margin-top:16px">Gestión</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-outline" onclick="openModal()" style="justify-content:center;padding:13px;">➕ &nbsp;Agregar adaptador</button>
+      <button class="btn btn-outline" onclick="exportJSON()" style="justify-content:center;padding:13px;">💾 &nbsp;Backup datos (JSON)</button>
+      <label class="btn btn-outline" style="justify-content:center;padding:13px;cursor:pointer;">
+        📂 &nbsp;Importar backup (JSON)
+        <input type="file" accept=".json" onchange="importJSON(event)" style="display:none"/>
+      </label>
+      <button class="btn" style="justify-content:center;padding:13px;background:#ff2f2f22;border:1px solid var(--danger);color:var(--danger);" onclick="confirmReset()">🗑️ &nbsp;Resetear todo</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openModal()" id="fab-btn">+</button>
+
+<!-- ── MODAL: ADD/EDIT ── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Agregar Adaptador</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Código</label>
+        <input class="form-input" id="f-code" placeholder="ADJ-001" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoría</label>
+        <input class="form-input" id="f-cat" placeholder="Canilla, Ducha…"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre / Descripción</label>
+      <input class="form-input" id="f-name" placeholder="Adaptador de ½ pulgada macho…"/>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Stock General</label>
+        <input class="form-input" id="f-total" type="number" min="0" value="0" placeholder="0"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Stock Parcial</label>
+        <input class="form-input" id="f-parcial" type="number" min="0" value="0" placeholder="0"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mínimo en valija 🎒</label>
+      <input class="form-input" id="f-minimo" type="number" min="0" value="0" placeholder="0" style="border-color:#ffb83066"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Foto</label>
+      <div class="img-upload" id="img-upload-box" onclick="document.getElementById('f-img-file').click()">
+        <span class="img-upload-icon">📷</span>
+        <span>Tocá para agregar foto</span>
+        <input type="file" id="f-img-file" accept="image/*" onchange="handleImgUpload(event)"/>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAdapter()" id="modal-save-btn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──
+let adapters = JSON.parse(localStorage.getItem('adapters') || 'null');
+if (!adapters) {
+  adapters = [
+    // ── ADAPTADORES ROSCA / UNIVERSALES ──
+    {id:'p001', code:'001', name:'Adapt. Universal c/Manguera', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p002', code:'002', name:'Adapt. Rosca (FV Tipo Unimix)', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p003', code:'003', name:'Adapt. Rosca Corta', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p004', code:'004', name:'Adapt. Rosca Larga', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p005', code:'005', name:'Adapt. Univ. Mariposa Diám. 11-12', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p006', code:'006', name:'Adapt. Univ. Mariposa Diám. 14', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p007', code:'007', name:'Adapt. Univ. Mariposa Diám. 16', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p008', code:'008', name:'Adapt. Univ. Mariposa Diám. 18', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p009', code:'009', name:'Adapt. Univ. Mariposa Diám. 20', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p010', code:'010', name:'Adapt. Rosca Hembra-Hembra', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p016', code:'016', name:'Adapt. Rosca Hembra O.N.', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p018', code:'018', name:'Adapt. Rosca Canilla Tipo Patio', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p019', code:'019', name:'Adapt. Rosca Macho 18.1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p020', code:'020', name:'Adapt. Rosca Especial', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p024', code:'024', name:'Adapt. Rosca Hembra 20.1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p027', code:'027', name:'Adapt. Rosca Larga Paso Fino', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p030', code:'030', name:'Adapt. H-M 1/2 c/Tuerca Ducha II', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p036', code:'036', name:'Adapt. M-M 3/4 BG Ducha II', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p037', code:'037', name:'Adapt. Rosca Macho (FV Swing Plus)', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p039', code:'039', name:'Adapt. Rosca Hembra-Hembra Diám. 22', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p041', code:'041', name:'Adapt. Rosca Canilla Piazza', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p051', code:'051', name:'Adapt. Sin Rosca Diám. 17', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p053', code:'053', name:'Adapt. Rosca BSP 3/4 x 14 Hilos', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p073', code:'073', name:'Adapt. Rosca Múltiple', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p078', code:'078', name:'Adapt. Rosca Diám. 23.5', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p083', code:'083', name:'Adapt. Rosca Macho 22 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p100', code:'100', name:'Adapt. Rosca Hembra BSP 1/2', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p102', code:'102', name:'Adapt. Rosca Macho FV Diám. 18.6', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p103', code:'103', name:'Adapt. Rosca Hembra p/Hidromet', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p135', code:'135', name:'Adapt. Rosca Macho 21 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p142', code:'142', name:'Adapt. Rosca Macho 16.3 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p144', code:'144', name:'Adapt. Rosca Macho 18.2 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p147', code:'147', name:'Adapt. Rosca Tipo Racor M. 24 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p148', code:'148', name:'Adapt. Rosca Hembra (Swing Plus) M. 24x1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p149', code:'149', name:'Adapt. Rosca p/Lavarropas M 24 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p155', code:'155', name:'Adapt. S-1000 c/Oring p/Manómetro', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p164', code:'164', name:'Adapt. Rosca Macho 20 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p174', code:'174', name:'Adapt. Rosca Aireador M 24 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p177', code:'177', name:'Adapt. Rectangular p/Pegar', cat:'Adaptador', total:0, parcial:0, img:'🔲'},
+    {id:'p228', code:'228', name:'Adapt. Ovalado', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p229', code:'229', name:'Adapt. Rosca H-H 22 x 1 Largo', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p245', code:'245', name:'Adapt. Rosca H-M 23 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p246', code:'246', name:'Adapt. Rosca Macho 23 x 1', cat:'Adaptador', total:0, parcial:0, img:'🔩'},
+    {id:'p573', code:'573', name:'Adapt. Universal c/Manguera Negro', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    {id:'p020b', code:'020B', name:'Adapt. M-H BG 3/4 p/Ducha CR', cat:'Adaptador', total:0, parcial:0, img:'🔧'},
+    // ── ESPECIALES ──
+    {id:'pe01', code:'S/N', name:'Adapt. Especial Kit 90°', cat:'Especial', total:0, parcial:0, img:'🔄'},
+    // ── ARANDELAS ──
+    {id:'ar01', code:'AR-X5', name:'Arandela Adaptador x 5', cat:'Arandela', total:0, parcial:0, img:'⭕'},
+    {id:'ar02', code:'AR-19x5', name:'Arandela Adaptador Diám. 19 x 5', cat:'Arandela', total:0, parcial:0, img:'⭕'},
+    {id:'ar03', code:'AR-21x5', name:'Arandela Adaptador Diám. 21 x 5', cat:'Arandela', total:0, parcial:0, img:'⭕'},
+    // ── LLAVES / HERRAMIENTAS ──
+    {id:'h001', code:'S-1000MM', name:'Llave de Corte S-1000 Macho/Macho', cat:'Llave', total:0, parcial:0, img:'🔑'},
+    {id:'h002', code:'S-1000MH', name:'Llave de Corte S-1000 Macho/Hembra', cat:'Llave', total:0, parcial:0, img:'🔑'},
+    {id:'h003', code:'LAJ-AIR', name:'Llave p/Aireadores Especiales Juego x 3 Unid.', cat:'Llave', total:0, parcial:0, img:'🔑'},
+    {id:'h004', code:'LAJ-BP', name:'Llave de Ajuste p/Válvula By Pass Universal', cat:'Llave', total:0, parcial:0, img:'🔑'},
+    {id:'h005', code:'LAJ-40K', name:'Llave de Ajuste p/Tapa Prefiltro 40K-D', cat:'Llave', total:0, parcial:0, img:'🔑'},
+    {id:'h006', code:'LCR-S1K', name:'Llave p/Uso en Conectores Rápidos', cat:'Llave', total:0, parcial:0, img:'🔑'},
+    {id:'h007', code:'PINZA', name:'Pinza de Fuerza Metálica', cat:'Herramienta', total:0, parcial:0, img:'🪛'},
+    // ── CONECTORES / ACCESORIOS ──
+    {id:'c001', code:'PSA-10KD', name:'Conector Rápido de Salida PSA 10KD', cat:'Conector', total:0, parcial:0, img:'🔌'},
+    {id:'c002', code:'S1K-X5', name:'Conect. Cocodrilo S-1000 x 5 Unid.', cat:'Conector', total:0, parcial:0, img:'🔌'},
+    {id:'c003', code:'BUJ-BM', name:'Buje de Derivación Canilla BM', cat:'Conector', total:0, parcial:0, img:'🔌'},
+    // ── KITS ──
+    {id:'k001', code:'SEC-KIT-O', name:'Sec-Kit-O', cat:'Kit', total:0, parcial:0, img:'📦'},
+    {id:'k002', code:'KIT-ANILL', name:'Kit Anillos Reg. p/C3 x 25 Unid.', cat:'Kit', total:0, parcial:0, img:'📦'},
+    {id:'k003', code:'KIT-BPRES', name:'Kit para Baja Presión Universal', cat:'Kit', total:0, parcial:0, img:'📦'},
+    {id:'k004', code:'KIT-CANT', name:'Kit Adapt. Rectos p/Canillas PSA Ducha II', cat:'Kit', total:0, parcial:0, img:'📦'},
+    {id:'k005', code:'KIT-CANT2', name:'Kit Adapt. p/Canilla No Tradicional Ducha II', cat:'Kit', total:0, parcial:0, img:'📦'},
+    {id:'k006', code:'SET-RETRO', name:'Set Adaptación Retro p/Kit Canilla', cat:'Kit', total:0, parcial:0, img:'📦'},
+    // ── LAP / PROLONGADORES ──
+    {id:'l001', code:'LAP-SM24', name:'LAP SM 24 x 1', cat:'LAP', total:0, parcial:0, img:'💧'},
+    {id:'l002', code:'LAP-BM8', name:'LAP BM 8 x 8', cat:'LAP', total:0, parcial:0, img:'💧'},
+    {id:'l003', code:'LAP-DCH', name:'LAP Ducha 1/2 x 1/2', cat:'LAP', total:0, parcial:0, img:'🚿'},
+    {id:'l004', code:'LAP-DCH2', name:'LAP Ducha II Macho-Macho 1/2 x 1/2', cat:'LAP', total:0, parcial:0, img:'🚿'},
+    {id:'l005', code:'LAP-SMBP', name:'LAP SM p/Manguera By Pass', cat:'LAP', total:0, parcial:0, img:'💧'},
+    {id:'l006', code:'PROL-34', name:'Prolongador 3/4 PSA Poli', cat:'Prolongador', total:0, parcial:0, img:'🔧'},
+    {id:'l007', code:'PROL-DCH', name:'Prolongador PSA Ducha II', cat:'Prolongador', total:0, parcial:0, img:'🚿'},
+    // ── SOPORTES ──
+    {id:'s001', code:'SOP-SRV', name:'Conj. Soporte Acrílico Senior/Vero', cat:'Soporte', total:0, parcial:0, img:'🗜️'},
+    {id:'s002', code:'SOP-S4', name:'Conj. Soporte Acrílico p/Senior 4', cat:'Soporte', total:0, parcial:0, img:'🗜️'},
+    {id:'s003', code:'SOP-MINI', name:'Conj. Soporte Acrílico p/Mini', cat:'Soporte', total:0, parcial:0, img:'🗜️'},
+    {id:'s004', code:'SOP-STOP', name:'Conj. Soporte PSA Stopper', cat:'Soporte', total:0, parcial:0, img:'🗜️'},
+    // ── PRECINTO / OTROS ──
+    {id:'o001', code:'PREC-X25', name:'Precinto x 25', cat:'Otro', total:0, parcial:0, img:'🔗'},
+    {id:'o002', code:'REG-CAU', name:'Regulador de Caudal', cat:'Otro', total:0, parcial:0, img:'⚙️'},
+    {id:'o003', code:'TAP-DCH', name:'Tapón Regulador p/Ducha x 5 Unidades', cat:'Otro', total:0, parcial:0, img:'🔵'},
+    {id:'o004', code:'ALCOH', name:'Alcohol Isopropílico', cat:'Otro', total:0, parcial:0, img:'🧴'},
+    {id:'o005', code:'VAR-ECO', name:'Varilla Inst. ECO-D SM', cat:'Otro', total:0, parcial:0, img:'📏'},
+    {id:'o006', code:'TE-LCV', name:'Te c/Llave de Corte p/Grifería PSA y ECO-D', cat:'Otro', total:0, parcial:0, img:'⚙️'},
+  ];
+  save();
+}
+let editId = null;
+let imgDataUrl = null;
+let currentTab = 'general';
+let activeFilter = 'Todos';
+let historialFilter = 'Todos';
+
+let historial = JSON.parse(localStorage.getItem('historial') || '[]');
+
+function save() { localStorage.setItem('adapters', JSON.stringify(adapters)); }
+function saveHistorial() { localStorage.setItem('historial', JSON.stringify(historial)); }
+
+function logMovimiento(adapter, field, delta) {
+  const now = new Date();
+  historial.unshift({
+    id: Date.now(),
+    adapterId: adapter.id,
+    code: adapter.code,
+    name: adapter.name,
+    cat: adapter.cat,
+    field: field,          // 'total' o 'parcial'
+    delta: delta,          // positivo = suma, negativo = descuento
+    fecha: now.toLocaleDateString('es-AR'),
+    hora: now.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'}),
+    ts: now.getTime()
+  });
+  // Máximo 500 entradas
+  if (historial.length > 500) historial = historial.slice(0, 500);
+  saveHistorial();
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['general','parcial','historial','export'][i] === tab);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  document.getElementById('fab-btn').style.display = (tab === 'export' || tab === 'historial') ? 'none' : 'flex';
+  if (tab === 'general') renderGeneral();
+  if (tab === 'parcial') renderParcial();
+  if (tab === 'historial') renderHistorial();
+  if (tab === 'export') renderExport();
+}
+
+// ── RENDER GENERAL ──
+function renderGeneral() {
+  const q = (document.getElementById('search-general').value || '').toLowerCase();
+  const categories = ['Todos', ...new Set(adapters.map(a => a.cat).filter(Boolean))];
+
+  // Pills
+  const pillsEl = document.getElementById('filter-pills-general');
+  pillsEl.innerHTML = categories.map(c =>
+    `<button class="pill ${activeFilter === c ? 'active' : ''}" onclick="activeFilter='${c}';renderGeneral()">${c}</button>`
+  ).join('');
+
+  let filtered = adapters;
+  if (activeFilter !== 'Todos') filtered = filtered.filter(a => a.cat === activeFilter);
+  if (q) filtered = filtered.filter(a => a.name.toLowerCase().includes(q) || a.code.toLowerCase().includes(q));
+
+  const totalUnits = adapters.reduce((s,a) => s + a.total, 0);
+  const parcialUnits = adapters.reduce((s,a) => s + a.parcial, 0);
+  const lowStock = adapters.filter(a => a.total > 0 && a.total <= 2).length;
+  document.getElementById('stats-general').innerHTML = `
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent)">${adapters.length}</div><div class="stat-label">Tipos</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">${totalUnits}</div><div class="stat-label">Unidades Total</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:${lowStock>0?'var(--warning)':'var(--text2)'}">${lowStock}</div><div class="stat-label">Stock Bajo</div></div>
+  `;
+
+  if (!filtered.length) {
+    document.getElementById('cards-general').innerHTML = `<div class="empty"><div class="empty-icon">📦</div><h3>Sin resultados</h3><p>Probá otro filtro o búsqueda</p></div>`;
+    return;
+  }
+  document.getElementById('cards-general').innerHTML = filtered.map(a => cardHTML(a, 'general')).join('');
+}
+
+// ── RENDER PARCIAL ──
+function renderParcial() {
+  const q = (document.getElementById('search-parcial').value || '').toLowerCase();
+
+  // Calcular faltantes
+  const conMinimo = adapters.filter(a => (a.minimo || 0) > 0);
+  const aReponer  = conMinimo.filter(a => a.parcial < (a.minimo || 0));
+  const unidadesFaltantes = aReponer.reduce((s,a) => s + ((a.minimo||0) - a.parcial), 0);
+
+  const totalP = adapters.reduce((s,a) => s + a.parcial, 0);
+  const tipos  = adapters.filter(a => a.parcial > 0).length;
+
+  document.getElementById('stats-parcial').innerHTML = `
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">${tipos}</div><div class="stat-label">Tipos</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">${totalP}</div><div class="stat-label">Unidades</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:${aReponer.length>0?'var(--danger)':'var(--accent2)'}">${aReponer.length}</div><div class="stat-label">A reponer</div></div>
+  `;
+
+  // Banner de alerta si hay faltantes
+  const bannerEl = document.getElementById('parcial-banner') || (() => {
+    const d = document.createElement('div');
+    d.id = 'parcial-banner';
+    document.getElementById('cards-parcial').before(d);
+    return d;
+  })();
+
+  if (aReponer.length > 0) {
+    bannerEl.innerHTML = `
+      <div style="background:rgba(255,74,74,0.1);border:1px solid var(--danger);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px">⚠️</span>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--danger);font-size:15px">${aReponer.length} adaptador${aReponer.length>1?'es':''} por reponer</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">Te faltan ${unidadesFaltantes} unidad${unidadesFaltantes>1?'es':''} en total para completar la valija</div>
+        </div>
+      </div>`;
+  } else {
+    bannerEl.innerHTML = conMinimo.length > 0
+      ? `<div style="background:rgba(0,212,170,0.08);border:1px solid var(--accent2);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;"><span style="font-size:22px">✅</span><div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent2);font-size:15px">Valija completa</div></div>`
+      : '';
+  }
+
+  // Separar: primero los que faltan reponer, después el resto
+  let filtered = adapters.filter(a => a.parcial > 0 || (a.minimo||0) > 0);
+  if (q) filtered = filtered.filter(a => a.name.toLowerCase().includes(q) || a.code.toLowerCase().includes(q));
+
+  // Ordenar: primero los que faltan (rojo), luego incompletos (naranja), luego ok
+  filtered.sort((a,b) => {
+    const estadoA = a.parcial === 0 && (a.minimo||0) > 0 ? 0 : a.parcial < (a.minimo||0) ? 1 : 2;
+    const estadoB = b.parcial === 0 && (b.minimo||0) > 0 ? 0 : b.parcial < (b.minimo||0) ? 1 : 2;
+    return estadoA - estadoB;
+  });
+
+  if (!filtered.length) {
+    document.getElementById('cards-parcial').innerHTML = `<div class="empty"><div class="empty-icon">🎒</div><h3>Stock parcial vacío</h3><p>En el stock General, sumá unidades a "Parcial" para armar tu valija</p></div>`;
+    return;
+  }
+  document.getElementById('cards-parcial').innerHTML = filtered.map(a => cardHTML(a, 'parcial')).join('');
+}
+
+// ── RENDER EXPORT ──
+function renderExport() {
+  const totalUnits = adapters.reduce((s,a) => s + a.total, 0);
+  const parcialUnits = adapters.reduce((s,a) => s + a.parcial, 0);
+  document.getElementById('stats-export').innerHTML = `
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent)">${adapters.length}</div><div class="stat-label">Adaptadores</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">${totalUnits}</div><div class="stat-label">Total General</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">${parcialUnits}</div><div class="stat-label">Total Parcial</div></div>
+  `;
+}
+
+// ── CARD HTML ──
+function cardHTML(a, mode) {
+  const cls = a.total === 0 ? 'no-stock' : a.total <= 2 ? 'low-stock' : '';
+  const imgHTML = a.img && a.img.startsWith('data:')
+    ? `<div class="adapter-img"><img src="${a.img}" alt="${a.name}"/></div>`
+    : `<div class="adapter-img">${a.img || '🔧'}</div>`;
+
+  // Mínimo valija
+  const min = a.minimo || 0;
+  let minimoHTML = '';
+  if (min > 0) {
+    const pct = Math.min(100, Math.round((a.parcial / min) * 100));
+    const estado = a.parcial >= min ? 'ok' : a.parcial > 0 ? 'warning' : 'danger';
+    const falta = min - a.parcial;
+    const label = a.parcial >= min ? `✓ Completo` : `Faltan ${falta}`;
+    minimoHTML = `
+      <div class="minimo-bar">
+        <div class="minimo-track">
+          <div class="minimo-fill ${estado}" style="width:${pct}%"></div>
+        </div>
+        <span class="minimo-label ${estado}">${label} (${a.parcial}/${min})</span>
+      </div>`;
+  }
+
+  let controls = '';
+  if (mode === 'general') {
+    controls = `
+      <div class="adapter-controls">
+        <div class="ctrl-label">General</div>
+        <div class="ctrl-group">
+          <button class="qty-btn minus" onclick="adjust('${a.id}','total',-1)">−</button>
+          <span class="qty-num">${a.total}</span>
+          <button class="qty-btn plus-green" onclick="adjust('${a.id}','total',1)">+</button>
+        </div>
+        <div class="ctrl-label" style="margin-top:4px">Parcial</div>
+        <div class="ctrl-group">
+          <button class="qty-btn minus" onclick="adjust('${a.id}','parcial',-1)">−</button>
+          <span class="qty-num">${a.parcial}</span>
+          <button class="qty-btn plus-green" onclick="adjust('${a.id}','parcial',1)">+</button>
+        </div>
+      </div>`;
+  } else {
+    controls = `
+      <div class="adapter-controls">
+        <div class="ctrl-label">Parcial</div>
+        <div class="ctrl-group">
+          <button class="qty-btn minus" onclick="adjust('${a.id}','parcial',-1)">−</button>
+          <span class="qty-num">${a.parcial}</span>
+          <button class="qty-btn plus-green" onclick="adjust('${a.id}','parcial',1)">+</button>
+        </div>
+        <div style="font-size:10px;color:var(--text3);text-align:right;margin-top:4px">Total: ${a.total}</div>
+      </div>`;
+  }
+
+  return `
+    <div class="adapter-card ${cls}" id="card-${a.id}">
+      <button class="card-menu-btn" onclick="openModal('${a.id}')">✏️</button>
+      ${imgHTML}
+      <div class="adapter-info">
+        <div class="adapter-code">${a.code}${a.cat ? ' · ' + a.cat : ''}</div>
+        <div class="adapter-name">${a.name}</div>
+        <div class="stock-row">
+          <div class="stock-badge">
+            <span class="stock-badge-label">General</span>
+            <span class="stock-badge-value total ${a.total===0?'zero':''}">${a.total}</span>
+          </div>
+          <div class="stock-badge">
+            <span class="stock-badge-label">Parcial</span>
+            <span class="stock-badge-value parcial ${a.parcial===0?'zero':''}">${a.parcial}</span>
+          </div>
+          ${min > 0 ? `<div class="stock-badge"><span class="stock-badge-label">Mínimo</span><span class="stock-badge-value" style="color:var(--warning);font-size:18px">${min}</span></div>` : ''}
+        </div>
+        ${minimoHTML}
+      </div>
+      ${controls}
+    </div>`;
+}
+
+// ── ADJUST ──
+function adjust(id, field, delta) {
+  const a = adapters.find(x => x.id === id);
+  if (!a) return;
+  const newVal = (a[field] || 0) + delta;
+  if (newVal < 0) { toast('No puede quedar negativo', true); return; }
+  if (field === 'parcial' && newVal > a.total) { toast('Parcial no puede superar el General', true); return; }
+  a[field] = newVal;
+  logMovimiento(a, field, delta);
+  save();
+  if (currentTab === 'general') renderGeneral();
+  else if (currentTab === 'parcial') renderParcial();
+}
+
+// ── MODAL ──
+function openModal(id) {
+  editId = id || null;
+  imgDataUrl = null;
+  const box = document.getElementById('img-upload-box');
+  if (id) {
+    const a = adapters.find(x => x.id === id);
+    document.getElementById('modal-title').textContent = 'Editar Adaptador';
+    document.getElementById('f-code').value = a.code;
+    document.getElementById('f-name').value = a.name;
+    document.getElementById('f-cat').value = a.cat || '';
+    document.getElementById('f-total').value = a.total;
+    document.getElementById('f-parcial').value = a.parcial;
+    document.getElementById('f-minimo').value = a.minimo || 0;
+    if (a.img && a.img.startsWith('data:')) {
+      imgDataUrl = a.img;
+      box.innerHTML = `<img src="${a.img}" alt="foto"/><input type="file" id="f-img-file" accept="image/*" onchange="handleImgUpload(event)"/>`;
+      box.classList.add('has-img');
+    } else {
+      box.innerHTML = `<span class="img-upload-icon">${a.img || '📷'}</span><span>Tocá para cambiar foto</span><input type="file" id="f-img-file" accept="image/*" onchange="handleImgUpload(event)"/>`;
+      box.classList.remove('has-img');
+    }
+    document.getElementById('modal-save-btn').textContent = 'Guardar';
+  } else {
+    document.getElementById('modal-title').textContent = 'Agregar Adaptador';
+    document.getElementById('f-code').value = '';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-cat').value = '';
+    document.getElementById('f-total').value = 0;
+    document.getElementById('f-parcial').value = 0;
+    document.getElementById('f-minimo').value = 0;
+    box.innerHTML = `<span class="img-upload-icon">📷</span><span>Tocá para agregar foto</span><input type="file" id="f-img-file" accept="image/*" onchange="handleImgUpload(event)"/>`;
+    box.classList.remove('has-img');
+    document.getElementById('modal-save-btn').textContent = 'Agregar';
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function handleImgUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    imgDataUrl = ev.target.result;
+    const box = document.getElementById('img-upload-box');
+    // preserve input
+    box.innerHTML = `<img src="${imgDataUrl}" alt="foto"/><input type="file" id="f-img-file" accept="image/*" onchange="handleImgUpload(event)"/>`;
+    box.classList.add('has-img');
+    box.onclick = () => document.getElementById('f-img-file').click();
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveAdapter() {
+  const code = document.getElementById('f-code').value.trim();
+  const name = document.getElementById('f-name').value.trim();
+  const cat  = document.getElementById('f-cat').value.trim();
+  const total   = parseInt(document.getElementById('f-total').value) || 0;
+  const parcial = parseInt(document.getElementById('f-parcial').value) || 0;
+  const minimo  = parseInt(document.getElementById('f-minimo').value) || 0;
+  if (!code || !name) { toast('Código y nombre son obligatorios', true); return; }
+  if (parcial > total) { toast('Parcial no puede superar el General', true); return; }
+
+  if (editId) {
+    const a = adapters.find(x => x.id === editId);
+    a.code = code; a.name = name; a.cat = cat; a.total = total; a.parcial = parcial; a.minimo = minimo;
+    if (imgDataUrl) a.img = imgDataUrl;
+    toast('Adaptador actualizado ✓');
+  } else {
+    const existing = adapters.find(a => a.code === code);
+    if (existing) { toast('Ese código ya existe', true); return; }
+    const img = imgDataUrl || '🔧';
+    adapters.push({ id: 'adp' + Date.now(), code, name, cat, total, parcial, minimo, img });
+    toast('Adaptador agregado ✓');
+  }
+  save();
+  closeModal();
+  if (currentTab === 'general') renderGeneral();
+  else if (currentTab === 'parcial') renderParcial();
+  else renderExport();
+}
+
+// ── EXPORT EXCEL ──
+function exportExcel() {
+  const wb = XLSX.utils.book_new();
+  const rows = [['Código','Nombre','Categoría','Stock General','Stock Parcial','Mínimo Valija','Estado Valija']];
+  adapters.forEach(a => {
+    const min = a.minimo || 0;
+    const estado = min === 0 ? '-' : a.parcial >= min ? '✓ Completo' : `Faltan ${min - a.parcial}`;
+    rows.push([a.code, a.name, a.cat || '', a.total, a.parcial, min, estado]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:12},{wch:40},{wch:16},{wch:16},{wch:16},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Stock Adaptadores');
+
+  // Summary sheet
+  const totalU = adapters.reduce((s,a)=>s+a.total,0);
+  const parcialU = adapters.reduce((s,a)=>s+a.parcial,0);
+  const sumRows = [
+    ['Resumen del Stock'],[''],
+    ['Total de tipos de adaptadores', adapters.length],
+    ['Total unidades en stock general', totalU],
+    ['Total unidades en stock parcial', parcialU],
+    ['Fecha de exportación', new Date().toLocaleDateString('es-AR')],
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(sumRows);
+  ws2['!cols'] = [{wch:35},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+
+  XLSX.writeFile(wb, 'Stock_Adaptadores_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  toast('Excel descargado ✓');
+}
+
+// ── BACKUP ──
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(adapters, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'adaptadores_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  toast('Backup guardado ✓');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error();
+      adapters = data;
+      save();
+      renderGeneral();
+      toast('Backup importado ✓');
+    } catch { toast('Archivo inválido', true); }
+  };
+  reader.readAsText(file);
+}
+
+function confirmReset() {
+  if (confirm('¿Resetear todo el stock? Esta acción no se puede deshacer.')) {
+    localStorage.removeItem('adapters');
+    adapters = [];
+    save();
+    renderGeneral();
+    renderExport();
+    toast('Stock reseteado');
+  }
+}
+
+// ── RENDER HISTORIAL ──
+function renderHistorial() {
+  const q = (document.getElementById('search-historial').value || '').toLowerCase();
+
+  // Stats
+  const hoy = new Date().toLocaleDateString('es-AR');
+  const movHoy = historial.filter(h => h.fecha === hoy).length;
+  const descuentos = historial.filter(h => h.delta < 0).length;
+  document.getElementById('stats-historial').innerHTML = `
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent)">${historial.length}</div><div class="stat-label">Total Movim.</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--accent2)">${movHoy}</div><div class="stat-label">Hoy</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${descuentos}</div><div class="stat-label">Descuentos</div></div>
+  `;
+
+  // Filter pills
+  const tipos = ['Todos', 'Descuentos', 'Ingresos', 'General', 'Parcial'];
+  document.getElementById('filter-pills-historial').innerHTML = tipos.map(t =>
+    `<button class="pill ${historialFilter===t?'active':''}" onclick="historialFilter='${t}';renderHistorial()">${t}</button>`
+  ).join('');
+
+  let items = [...historial];
+  if (historialFilter === 'Descuentos') items = items.filter(h => h.delta < 0);
+  if (historialFilter === 'Ingresos')   items = items.filter(h => h.delta > 0);
+  if (historialFilter === 'General')    items = items.filter(h => h.field === 'total');
+  if (historialFilter === 'Parcial')    items = items.filter(h => h.field === 'parcial');
+  if (q) items = items.filter(h => h.name.toLowerCase().includes(q) || h.code.toLowerCase().includes(q));
+
+  if (!items.length) {
+    document.getElementById('cards-historial').innerHTML = `<div class="empty"><div class="empty-icon">🕒</div><h3>Sin movimientos</h3><p>Cada vez que sumés o restés stock, quedará registrado acá</p></div>`;
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  items.forEach(h => {
+    if (!byDate[h.fecha]) byDate[h.fecha] = [];
+    byDate[h.fecha].push(h);
+  });
+
+  let html = '';
+  Object.entries(byDate).forEach(([fecha, movs]) => {
+    html += `<div class="section-title" style="margin-top:12px">${fecha === new Date().toLocaleDateString('es-AR') ? '📅 Hoy' : '📅 ' + fecha}</div>`;
+    movs.forEach(h => {
+      const isPlus = h.delta > 0;
+      const stockLabel = h.field === 'total' ? 'General' : 'Parcial';
+      html += `
+        <div class="hist-card">
+          <div class="hist-icon ${isPlus ? 'plus' : 'minus'}">${isPlus ? '➕' : '➖'}</div>
+          <div class="hist-info">
+            <div class="hist-name">${h.name}</div>
+            <div class="hist-meta">${h.code} · Stock ${stockLabel} · ${h.hora}hs</div>
+          </div>
+          <div class="hist-delta ${isPlus ? 'plus' : 'minus'}">${isPlus ? '+' : ''}${h.delta}</div>
+        </div>`;
+    });
+  });
+  document.getElementById('cards-historial').innerHTML = html;
+}
+
+function confirmClearHistory() {
+  if (confirm('¿Borrar todo el historial? No se puede deshacer.')) {
+    historial = [];
+    saveHistorial();
+    renderHistorial();
+    toast('Historial borrado');
+  }
+}
+
+// ── TOAST ──
+function toast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (isError ? ' error' : '');
+  void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── INIT ──
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+renderGeneral();
+</script>
+</body>
+</html>
